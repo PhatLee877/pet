@@ -1,0 +1,157 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+local LocalPlayer = Players.LocalPlayer
+
+-- UI chính
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "EggPredictorUI"
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+ScreenGui.ResetOnSpawn = false
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 320, 0, 120)
+MainFrame.Position = UDim2.new(0.5, -160, 0, 30)
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+MainFrame.BorderSizePixel = 0
+MainFrame.BackgroundTransparency = 0.1
+MainFrame.Parent = ScreenGui
+MainFrame.Active = true
+MainFrame.Draggable = true
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0.4, 0)
+Title.Position = UDim2.new(0, 0, 0, 0)
+Title.BackgroundTransparency = 1
+Title.Font = Enum.Font.GothamBold
+Title.Text = "🐣 Egg Predictor"
+Title.TextSize = 24
+Title.TextColor3 = Color3.fromRGB(255, 255, 85)
+Title.Parent = MainFrame
+
+local Footer = Instance.new("TextLabel")
+Footer.Size = UDim2.new(1, 0, 0.3, 0)
+Footer.Position = UDim2.new(0, 0, 0.7, 0)
+Footer.BackgroundTransparency = 1
+Footer.Font = Enum.Font.Gotham
+Footer.Text = "Script By PhatLee | Enjoy it"
+Footer.TextSize = 16
+Footer.TextColor3 = Color3.fromRGB(200, 200, 200)
+Footer.Parent = MainFrame
+
+-- Danh sách pet từng loại trứng
+local eggPetData = {
+	["Common Egg"] = {{"Golden Lab", 33.33}, {"Dog", 33.33}, {"Bunny", 33.33}},
+	["Uncommon Egg"] = {{"Black Bunny", 25}, {"Chicken", 25}, {"Cat", 25}, {"Deer", 25}},
+	["Rare Egg"] = {{"Orange Tabby", 33.33}, {"Spotted Deer", 25}, {"Rooster", 16.67}, {"Pig", 16.67}, {"Monkey", 8.33}},
+	["Legendary Egg"] = {{"Cow", 40}, {"Silver Monkey", 40}, {"Sea Otter", 10}, {"Turtle", 5}, {"Polar Bear", 5}},
+	["Mythical Egg"] = {{"Grey Mouse", 30}, {"Brown Mouse", 25}, {"Squirrel", 25}, {"Red Giant Ant", 10}, {"Red Fox", 5}},
+	["Bug Egg"] = {{"Snail", 30}, {"Giant Ant", 25}, {"Caterpillar", 20}, {"Praying Mantis", 5}, {"Dragonfly", 20}},
+	["Exotic Bug Egg"] = {{"Hedgehog", 35}, {"Mole", 20}, {"Frog", 15}, {"Echo Frog", 8}, {"Night Owl", 2}, {"Raccoon", 20}},
+	["Premium Night Egg"] = {{"Hedgehog", 35}, {"Mole", 20}, {"Frog", 15}, {"Echo Frog", 8}, {"Night Owl", 2}, {"Raccoon", 20}},
+	["Bee Egg"] = {{"Bee", 55}, {"Honey Bee", 20}, {"Bear Bee", 5}, {"Petal Bee", 4}, {"Queen Bee", 16}},
+	["Anti Bee Egg"] = {{"Wasp", 50}, {"Tarantula Hawk", 20}, {"Moth", 10}, {"Butterfly", 1}, {"Disco Bee", 19}},
+	["Dinosaur Egg"] = {{"Raptor", 30}, {"Triceratops", 25}, {"Stegosaurus", 20}, {"Pterodactyl", 5}, {"Brontosaurus", 1}, {"T-Rex", 19}},
+	["Premium Primal Egg"] = {{"Parasaurolophus", 30}, {"Iguanodon", 25}, {"Pachycephalosaurus", 20}, {"Dilophosaurus", 5}, {"Ankylosaurus", 1}, {"Spinosaurus", 19}},
+	["Zen Egg"] = {{"Shiba Inu", 35}, {"Nihonzaru", 25}, {"Tanuki", 15}, {"Tanchozuru", 4}, {"Kappa", 1}, {"Kitsune", 20}},
+}
+
+-- Random pet theo tỷ lệ
+local function getRandomPet(petList)
+	local roll = math.random() * 100
+	local total = 0
+	for _, petData in ipairs(petList) do
+		total += petData[2]
+		if roll <= total then
+			return petData[1]
+		end
+	end
+	return petList[1][1]
+end
+
+-- ESP
+local eggESPData = {}
+local ESPEnabled = true
+
+local function createESP(egg)
+	if egg:FindFirstChild("ESP") then return end
+
+	local petList = eggPetData[egg.Name]
+	if not petList then return end
+
+	local adornee = egg:FindFirstChild("Main") or egg:FindFirstChildWhichIsA("BasePart")
+	if not adornee then return end
+
+	local billboard = Instance.new("BillboardGui")
+	billboard.Name = "ESP"
+	billboard.Size = UDim2.new(0, 200, 0, 50)
+	billboard.StudsOffset = Vector3.new(0, 3, 0)
+	billboard.Adornee = adornee
+	billboard.AlwaysOnTop = true
+	billboard.Parent = egg
+
+	local text = Instance.new("TextLabel")
+	text.Size = UDim2.new(1, 0, 1, 0)
+	text.BackgroundTransparency = 1
+	text.TextColor3 = Color3.fromRGB(255, 255, 0)
+	text.Font = Enum.Font.GothamBold
+	text.TextScaled = true
+	text.TextStrokeTransparency = 0
+	text.Text = "[ Predict: ? 🐾 ]"
+	text.Parent = billboard
+
+	eggESPData[egg] = text
+end
+
+-- Cập nhật ESP nếu bật
+RunService.RenderStepped:Connect(function()
+	if not ESPEnabled then return end
+	for _, egg in ipairs(Workspace:GetDescendants()) do
+		if egg:IsA("Model") and eggPetData[egg.Name] then
+			createESP(egg)
+		end
+	end
+end)
+
+-- Nút Random Pet
+local Button = Instance.new("TextButton")
+Button.Size = UDim2.new(0, 140, 0, 30)
+Button.Position = UDim2.new(0, 20, 0.43, 0) -- đã chỉnh cao hơn
+Button.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+Button.TextColor3 = Color3.fromRGB(255, 255, 255)
+Button.Text = "🔁 Random Pet"
+Button.Font = Enum.Font.GothamBold
+Button.TextSize = 16
+Button.Parent = MainFrame
+
+-- Nút Toggle ESP
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Size = UDim2.new(0, 140, 0, 30)
+ToggleButton.Position = UDim2.new(1, -160, 0.43, 0) -- đã chỉnh cao hơn
+ToggleButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.Text = "👁️ Toggle ESP"
+ToggleButton.Font = Enum.Font.GothamBold
+ToggleButton.TextSize = 16
+ToggleButton.Parent = MainFrame
+
+-- Xử lý khi bấm Random Pet
+Button.MouseButton1Click:Connect(function()
+	for egg, label in pairs(eggESPData) do
+		local petList = eggPetData[egg.Name]
+		if petList then
+			local pet = getRandomPet(petList)
+			label.Text = "[ Predict: " .. pet .. " 🐾 ]"
+		end
+	end
+end)
+
+-- Xử lý khi bấm Toggle ESP
+ToggleButton.MouseButton1Click:Connect(function()
+	ESPEnabled = not ESPEnabled
+	for egg, label in pairs(eggESPData) do
+		if egg:FindFirstChild("ESP") then
+			egg.ESP.Enabled = ESPEnabled
+		end
+	end
+end)
