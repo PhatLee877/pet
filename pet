@@ -53,7 +53,7 @@ local eggPetData = {
 	["Anti Bee Egg"] = {{"Wasp", 50}, {"Tarantula Hawk", 20}, {"Moth", 10}, {"Butterfly", 0.8}, {"Disco Bee", 0.5}},
 	["Dinosaur Egg"] = {{"Raptor", 30}, {"Triceratops", 25}, {"Stegosaurus", 20}, {"Pterodactyl", 5}, {"Brontosaurus", 1}, {"T-Rex", 0.5}},
 	["Premium Primal Egg"] = {{"Parasaurolophus", 30}, {"Iguanodon", 45}, {"Pachycephalosaurus", 40}, {"Dilophosaurus", 8.5}, {"Ankylosaurus", 6}, {"Spinosaurus", 0.5}},
-	["Zen Egg"] = {{"Shiba Inu", 35}, {"Nihonzaru", 25}, {"Tanuki", 64}, {"Tanchozuru", 30,92}, {"Kappa", 1}, {"Kitsune", 0.08}},
+	["Zen Egg"] = {{"Shiba Inu", 35}, {"Nihonzaru", 25}, {"Tanuki", 64}, {"Tanchozuru", 30.92}, {"Kappa", 1}, {"Kitsune", 0.08}},
 }
 
 -- Random pet theo tỷ lệ
@@ -97,7 +97,10 @@ local function createESP(egg)
 	text.Font = Enum.Font.GothamBold
 	text.TextScaled = true
 	text.TextStrokeTransparency = 0
-	text.Text = "[ Predict: ? 🐾 ]"
+
+	local pet = getRandomPet(petList)
+	text.Text = "[ " .. pet .. " 🐾 ]"
+
 	text.Parent = billboard
 
 	eggESPData[egg] = text
@@ -116,7 +119,7 @@ end)
 -- Nút Random Pet
 local Button = Instance.new("TextButton")
 Button.Size = UDim2.new(0, 140, 0, 30)
-Button.Position = UDim2.new(0, 20, 0.43, 0) -- đã chỉnh cao hơn
+Button.Position = UDim2.new(0, 20, 0.43, 0)
 Button.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 Button.TextColor3 = Color3.fromRGB(255, 255, 255)
 Button.Text = "🔁 Random Pet"
@@ -127,7 +130,7 @@ Button.Parent = MainFrame
 -- Nút Toggle ESP
 local ToggleButton = Instance.new("TextButton")
 ToggleButton.Size = UDim2.new(0, 140, 0, 30)
-ToggleButton.Position = UDim2.new(1, -160, 0.43, 0) -- đã chỉnh cao hơn
+ToggleButton.Position = UDim2.new(1, -160, 0.43, 0)
 ToggleButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 ToggleButton.Text = "👁️ Toggle ESP"
@@ -141,7 +144,31 @@ Button.MouseButton1Click:Connect(function()
 		local petList = eggPetData[egg.Name]
 		if petList then
 			local pet = getRandomPet(petList)
-			label.Text = "[ Predict: " .. pet .. " 🐾 ]"
+			label.Text = "[ " .. pet .. " 🐾 ]"
+		end
+	end
+end)
+
+-- Xử lý khi bấm Toggle ESP
+ToggleButton.MouseButton1Click:Connect(function()
+	ESPEnabled = not ESPEnabled
+	for egg, label in pairs(eggESPData) do
+		if egg:FindFirstChild("ESP") then
+			egg.ESP.Enabled = ESPEnabled
+		end
+	end
+end)ToggleButton.Text = "👁️ Toggle ESP"
+ToggleButton.Font = Enum.Font.GothamBold
+ToggleButton.TextSize = 16
+ToggleButton.Parent = MainFrame
+
+-- Xử lý khi bấm Random Pet
+Button.MouseButton1Click:Connect(function()
+	for egg, label in pairs(eggESPData) do
+		local petList = eggPetData[egg.Name]
+		if petList then
+			local pet = getRandomPet(petList)
+			label.Text = "[ " .. pet .. " 🐾 ]"
 		end
 	end
 end)
